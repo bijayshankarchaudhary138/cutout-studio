@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import imglyRemoveBackground from '@imgly/background-removal';
+import removeBackground from '@imgly/background-removal';
 import { 
   Upload, Download, Sparkles, ShieldCheck, Zap, RefreshCw, 
   SlidersHorizontal, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Copy, Check
@@ -35,7 +35,7 @@ export default function Home() {
     setProgressText('AI Engine Initialize Ho Raha Hai...');
     
     try {
-      const blob = await imglyRemoveBackground(imageFile, {
+      const blob = await removeBackground(imageFile, {
         progress: (key: string, current: number, total: number) => {
           const percent = Math.round((current / total) * 100);
           if (percent < 50) {
