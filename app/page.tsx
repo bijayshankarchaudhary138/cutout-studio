@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import removeBackground from '@imgly/background-removal';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Upload, Download, Sparkles, ShieldCheck, Zap, RefreshCw, 
   SlidersHorizontal, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Copy, Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+declare global {
+  interface Window {
+    imglyRemoveBackground?: (image: any, config?: any) => Promise<Blob>;
+  }
+}
 
 export default function Home() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -17,7 +22,20 @@ export default function Home() {
   const [sliderPos, setSliderPos] = useState<number>(50);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [copied, setCopied] = useState<boolean>(false);
+  const [scriptLoaded, setScriptLoaded] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/browser/index.js';
+    script.async = true;
+    script.onload = () => setScriptLoaded(true);
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -35,7 +53,11 @@ export default function Home() {
     setProgressText('AI Engine Initialize Ho Raha Hai...');
     
     try {
-      const blob = await removeBackground(imageFile, {
+      if (!window.imglyRemoveBackground) {
+        throw new Error('AI Engine load nahi hua. Kripya refresh karein.');
+      }
+
+      const blob = await window.imglyRemoveBackground(imageFile, {
         progress: (key: string, current: number, total: number) => {
           const percent = Math.round((current / total) * 100);
           if (percent < 50) {
@@ -51,7 +73,7 @@ export default function Home() {
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.7 } });
     } catch (error) {
       console.error(error);
-      alert('Photo process nahi ho paayi. Kripya doosri photo try karein.');
+      alert('Photo process karne me diat aayi. Page refresh karke firse try karein.');
     } finally {
       setLoading(false);
     }
